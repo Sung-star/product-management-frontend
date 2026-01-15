@@ -1,70 +1,97 @@
-# Getting Started with Create React App
+# Dự Án Frontend Quản Lý Sản Phẩm - ReactJS
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Đây là một dự án frontend được xây dựng bằng React cho một hệ thống quản lý bán hàng, bao gồm các chức năng cho cả khách hàng và quản trị viên.
 
-## Available Scripts
+## Công nghệ sử dụng
 
-In the project directory, you can run:
+-   **Framework:** ReactJS
+-   **Routing:** `react-router-dom`
+-   **Quản lý trạng thái:** React Context API
+-   **Styling:** CSS thuần (với cấu trúc CSS-per-component)
+-   **HTTP Client:** `fetch` hoặc `axios` (thông qua `services/api.js`)
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Những Gì Đã Làm Được (Tính Năng Hiện Có)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Dự án đã xây dựng được một nền tảng vững chắc với các tính năng cốt lõi cho một trang thương mại điện tử.
 
-### `npm test`
+### 1. Phía Khách Hàng (Client)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+-   **Xác thực người dùng:** Đăng nhập, Đăng ký.
+-   **Trang cửa hàng:**
+    -   Hiển thị sản phẩm dưới dạng lưới hoặc danh sách.
+    -   Giao diện thẻ sản phẩm (`ProductCard`) chi tiết, hiển thị các huy hiệu như "Hết hàng", "Sắp hết", "Sale", "Mới".
+    -   Hiển thị giá gốc và giá đã giảm.
+-   **Trang chi tiết sản phẩm:** Xem thông tin đầy đủ, hình ảnh của sản phẩm.
+-   **Giỏ hàng:** Thêm sản phẩm vào giỏ, xem giỏ hàng.
+-   **Thanh toán:** Giao diện cho quy trình thanh toán.
+-   **Lọc sản phẩm:** Lọc sản phẩm theo các tiêu chí .
 
-### `npm run build`
+### 2. Phía Quản Trị Viên (Admin)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+-   **Bảng điều khiển (Dashboard):** Giao diện tổng quan dành cho quản trị viên.
+-   **Quản lý Sản phẩm:**
+    -   Thêm và chỉnh sửa sản phẩm.
+-   **Quản lý Danh mục:** Thêm, xóa, sửa danh mục sản phẩm.
+-   **Quản lý Người dùng:** Xem và quản lý tài khoản người dùng.
+-   **Quản lý Đơn hàng:** Xem và cập nhật trạng thái đơn hàng.
+-   **Thống kê:** Giao diện xem báo cáo, thống kê doanh thu.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 3. Cấu Trúc và Kỹ Thuật
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+-   **`ProtectedRoute`:** Bảo vệ các trang yêu cầu đăng nhập.
+-   **`Context API`:** Quản lý trạng thái đăng nhập (`AuthContext`) và giỏ hàng (`CartContext`) toàn cục.
+-   **Component Tái sử dụng:** `Toast` (Thông báo), `Skeleton` (Hiệu ứng tải), `ProductCard`.
+-   **Service Layer:** Tách biệt logic gọi API ra khỏi component.
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Những Việc Cần Làm Tiếp Theo
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Đây là danh sách các gợi ý để hoàn thiện và mở rộng dự án:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+1.  **Hoàn Thiện Tích Hợp Backend:**
+    -   Kết nối tất cả các chức năng với API backend.
+    -   Xử lý triệt để các lỗi trả về từ API và hiển thị thông báo thân thiện.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+2.  **Cải Thiện Trải Nghiệm Người Dùng (UX):**
+    -   Thêm chức năng **Tìm kiếm** sản phẩm theo tên.
+    -   Triển khai **Phân trang** cho các danh sách (sản phẩm, đơn hàng, người dùng).
+    -   Xây dựng trang **Hồ sơ người dùng** (User Profile), cho phép người dùng xem lịch sử đơn hàng và cập nhật thông tin cá nhân.
+    -   Phát triển tính năng **Đánh giá và Bình luận** sản phẩm.
 
-## Learn More
+3.  **Kiểm Thử (Testing):**
+    -   Viết Unit Test cho các component và logic phức tạp bằng Jest và React Testing Library.
+    -   Viết Integration Test cho các luồng quan trọng như thanh toán.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+4.  **Tối Ưu Hóa (Optimization):**
+    -   Lazy loading hình ảnh và các component để tăng tốc độ tải trang.
+    -   Code-splitting để giảm kích thước bundle ban đầu.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+## Hướng Dẫn Cài Đặt và Chạy Dự Án
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1.  **Clone repository về máy:**
+    ```sh
+    git clone <your-repository-url>
+    ```
 
-### Analyzing the Bundle Size
+2.  **Di chuyển vào thư mục dự án:**
+    ```sh
+    cd product-management-frontend
+    ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+3.  **Cài đặt các dependencies:**
+    ```sh
+    npm install
+    ```
 
-### Making a Progressive Web App
+4.  **Chạy dự án ở môi trường development:**
+    ```sh
+    npm start
+    ```
+    Mở trình duyệt và truy cập `http://localhost:3000`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+    *Lưu ý: Cần đảm bảo rằng server backend đang chạy ở `http://localhost:8080` để các chức năng liên quan đến API hoạt động.*

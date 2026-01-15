@@ -1,0 +1,154 @@
+.category-manager-admin {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Form Modal */
+.form-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease;
+}
+
+.form-modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.form-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.form-modal-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.form-modal-body {
+  padding: 25px;
+}
+
+.form-group-admin {
+  margin-bottom: 20px;
+}
+
+.form-group-admin label {
+  display: block;
+  margin-bottom: 8px;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.form-group-admin input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: #fafafa;
+}
+
+.form-group-admin input:focus {
+  outline: none;
+  border-color: #3498db;
+  background: white;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+}
+
+.form-modal-actions {
+  display: flex;
+  gap: 12px;
+  padding: 20px 25px;
+  background: #f8f9fa;
+  border-radius: 0 0 12px 12px;
+}
+
+.btn-cancel-form,
+.btn-submit-form {
+  flex: 1;
+  padding: 12px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel-form {
+  background: white;
+  color: #2c3e50;
+  border: 1px solid #bdc3c7;
+}
+
+.btn-cancel-form:hover {
+  background: #ecf0f1;
+}
+
+.btn-submit-form {
+  background: #3498db;
+  color: white;
+}
+
+.btn-submit-form:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .form-modal-content {
+    width: 95%;
+  }
+
+  .form-modal-actions {
+    flex-direction: column;
+  }
+
+  .btn-cancel-form,
+  .btn-submit-form {
+    width: 100%;
+  }
+}
