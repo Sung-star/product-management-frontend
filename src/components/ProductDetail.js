@@ -9,7 +9,7 @@ import ReviewList from '../components/ReviewList';
 import ReviewForm from '../components/ReviewForm';
 import StarRating from '../components/StarRating';
 import { useAuth } from '../context/AuthContext';
-
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -53,16 +53,12 @@ const ProductDetail = () => {
 
   const getProductImages = () => {
     if (!product) return [];
-    
     if (product.imageUrls) {
-      // Nếu imageUrls là array
       if (Array.isArray(product.imageUrls)) {
-        return product.imageUrls.map(url => `http://localhost:8080${url}`);
+        return product.imageUrls.map(url => `${API_URL}${url}`);
       }
-      // Nếu imageUrls là string
       if (typeof product.imageUrls === 'string') {
-        return product.imageUrls.split(',')
-          .map(url => `http://localhost:8080${url.trim()}`);
+        return product.imageUrls.split(',').map(url => `${API_URL}${url.trim()}`);
       }
     }
     

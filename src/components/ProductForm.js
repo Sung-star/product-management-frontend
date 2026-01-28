@@ -164,7 +164,7 @@ const ProductForm = ({ product, onClose, onSaveSuccess }) => {
             <div className="image-preview-grid">
                {existingImages.map((url, i) => (
                  <div key={`exist-${i}`} className="preview-item">
-                    <img src={`http://localhost:8080${url}`} className="preview-img" alt="Existing" />
+                    <img src={`${process.env.REACT_APP_API_URL || 'http://localhost:8080'}${url}`} className="preview-img" alt="Existing" />
                     <button type="button" className="btn-remove-img" onClick={() => removeExistingImage(i)}>×</button>
                     {i === 0 && <span className="badge-main">Chính</span>}
                  </div>

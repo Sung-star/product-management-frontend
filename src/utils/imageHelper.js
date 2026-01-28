@@ -1,7 +1,7 @@
 // utils/imageHelper.js
 
-const BASE_URL = 'http://localhost:8080';
-
+// const BASE_URL = 'http://localhost:8080';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 /**
  * Lấy ảnh chính của sản phẩm
  * @param {Object} product - Product object hoặc object có imageUrls

@@ -87,7 +87,7 @@ const WishlistPage = () => {
 
   const getImageUrl = (imageUrls) => {
     if (!imageUrls || imageUrls.length === 0) return '/placeholder.png';
-    return `http://localhost:8080/${imageUrls[0]}`;
+    return `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/${imageUrls[0]}`;
   };
 
   if (loading) {

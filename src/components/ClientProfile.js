@@ -32,7 +32,9 @@ const ClientProfile = () => {
   const getFullImageUrl = (path) => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
-    return `http://localhost:8080${path.startsWith('/') ? '' : '/'}${path}`;
+    // 🟢 Thay localhost bằng biến môi trường
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+    return `${API_URL}${path.startsWith('/') ? '' : '/'}${path}`;
   };
 
   const [avatarPreview, setAvatarPreview] = useState(getFullImageUrl(user.avatarUrl));

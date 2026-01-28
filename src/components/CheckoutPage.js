@@ -131,7 +131,7 @@ const CheckoutPage = () => {
           productPrice: item.price,
           quantity: item.cartQuantity,
           subtotal: item.price * item.cartQuantity,
-          imageUrl: item.imageUrls?.[0] ? `http://localhost:8080${item.imageUrls[0]}` : ''
+          imageUrl: item.imageUrls?.[0] ? `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}${item.imageUrls[0]}` : ''
         })),
         totalAmount: getTotalAmount()
       };
@@ -154,7 +154,7 @@ const CheckoutPage = () => {
         
         // Gọi API tạo link thanh toán VNPAY với orderId
         const paymentRes = await fetch(
-          `http://localhost:8080/api/payment/create_payment?amount=${totalAmount}&orderId=${newOrderId}`
+          `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/api/payment/create_payment?amount=${totalAmount}&orderId=${newOrderId}`
         );
         const paymentData = await paymentRes.json();
 

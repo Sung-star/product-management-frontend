@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useToast } from './Toast';
 import '../styles/CartPage.css';
-
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const CartPage = () => {
   const navigate = useNavigate();
   const { cart, removeFromCart, updateQuantity, clearCart, getCartTotal } = useCart();
@@ -74,7 +74,7 @@ const CartPage = () => {
                 <img
                   src={
                     item.imageUrls?.length > 0
-                      ? `http://localhost:8080${item.imageUrls[0]}`
+                      ? `${API_URL}${item.imageUrls[0]}`
                       : '/no-image.png'
                   }
                   alt={item.name}

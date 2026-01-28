@@ -176,7 +176,7 @@ const ChatBotAdvanced = () => {
                         <div key={product.id} className="mini-product-card" onClick={() => window.location.href = `/product/${product.id}`}>
                           <div className="mini-product-img">
                             <img 
-                              src={product.imageUrls && product.imageUrls.length > 0 ? `http://localhost:8080${product.imageUrls[0]}` : '/placeholder.png'}
+                              src={product.imageUrls && product.imageUrls.length > 0 ? `${product.imageUrls[0]}` : '/placeholder.png'}
                               alt={product.name}
                               onError={(e) => {e.target.src = '/placeholder.png';}}
                             />

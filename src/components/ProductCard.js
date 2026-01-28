@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/ProductCard.css';
-
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 const ProductCard = ({ product, onAddToCart, viewMode = 'grid' }) => {
   const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
 
   const getProductImages = () => {
-    if (product.imageUrls) {
-      if (Array.isArray(product.imageUrls)) {
-        return product.imageUrls.map(url => `http://localhost:8080${url}`);
-      }
-      if (typeof product.imageUrls === 'string') {
-        return product.imageUrls.split(',').map(url => `http://localhost:8080${url.trim()}`);
-      }
+  if (product.imageUrls) {
+    if (Array.isArray(product.imageUrls)) {
+      return product.imageUrls.map(url => `${API_URL}${url}`);
     }
-    return ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400'];
-  };
+    if (typeof product.imageUrls === 'string') {
+      return product.imageUrls.split(',').map(url => `${API_URL}${url.trim()}`);
+    }
+  }
+  return ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400'];
+};
 
   const images = getProductImages();
 

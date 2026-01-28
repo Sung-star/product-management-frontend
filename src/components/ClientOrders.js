@@ -58,7 +58,7 @@ const ClientOrders = () => {
 
     // Thêm prefix localhost nếu chưa có http
     if (!finalUrl.startsWith('http') && !finalUrl.startsWith('data:')) {
-      return `http://localhost:8080${finalUrl.startsWith('/') ? '' : '/'}${finalUrl}`;
+      return `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}${finalUrl.startsWith('/') ? '' : '/'}${finalUrl}`;
     }
 
     return finalUrl;
