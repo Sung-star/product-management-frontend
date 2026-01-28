@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { productAPI, categoryAPI } from '../services/api';
-import '../styles/ProductForm.css';
+import '../styles/ProductList.css'; // Dùng chung CSS để đồng bộ
 
 const ProductForm = ({ product, onClose, onSaveSuccess }) => {
   const [formData, setFormData] = useState({
@@ -28,7 +28,6 @@ const ProductForm = ({ product, onClose, onSaveSuccess }) => {
         categoryId: product.categoryId || '',
       });
       
-      // Load existing images
       if (product.imageUrls) {
         const images = Array.isArray(product.imageUrls) 
           ? product.imageUrls 
@@ -44,38 +43,27 @@ const ProductForm = ({ product, onClose, onSaveSuccess }) => {
       setCategories(response.data);
       setError(null);
     } catch (err) {
-      console.error("Error fetching categories", err.response?.data || err.message);
       setCategories([]);
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    
     if (files.length + imageFiles.length + existingImages.length > 5) {
       setError('Chỉ được upload tối đa 5 ảnh!');
       return;
     }
-
     setImageFiles(prev => [...prev, ...files]);
-
-    // Create previews
     files.forEach(file => {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreviews(prev => [...prev, reader.result]);
-      };
+      reader.onloadend = () => setImagePreviews(prev => [...prev, reader.result]);
       reader.readAsDataURL(file);
     });
-
     setError(null);
   };
 
@@ -88,36 +76,13 @@ const ProductForm = ({ product, onClose, onSaveSuccess }) => {
     setExistingImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const validateForm = () => {
-    if (!formData.name.trim()) {
-      setError('Tên sản phẩm không được để trống');
-      return false;
-    }
-    if (!formData.price || formData.price <= 0) {
-      setError('Giá phải lớn hơn 0');
-      return false;
-    }
-    if (!formData.quantity || formData.quantity < 0) {
-      setError('Số lượng không được âm');
-      return false;
-    }
-    return true;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-
-    if (!validateForm()) {
-      return;
-    }
-
     setLoading(true);
 
     try {
       const formDataToSend = new FormData();
-      
-      // Add product data as JSON blob
       const productData = {
         name: formData.name,
         description: formData.description,
@@ -126,196 +91,102 @@ const ProductForm = ({ product, onClose, onSaveSuccess }) => {
         categoryId: formData.categoryId ? parseInt(formData.categoryId) : null,
       };
 
-      // If editing, include existing images
       if (product && existingImages.length > 0) {
         productData.existingImageUrls = existingImages;
       }
 
-      formDataToSend.append(
-        'product',
-        new Blob([JSON.stringify(productData)], { type: 'application/json' })
-      );
-
-      // Add image files
-      imageFiles.forEach((file, index) => {
-        formDataToSend.append('images', file);
-      });
+      formDataToSend.append('product', new Blob([JSON.stringify(productData)], { type: 'application/json' }));
+      imageFiles.forEach(file => formDataToSend.append('images', file));
 
       if (product) {
         await productAPI.updateProductWithImages(product.id, formDataToSend);
-        alert('Cập nhật sản phẩm thành công!');
       } else {
         await productAPI.createProductWithImages(formDataToSend);
-        alert('Thêm sản phẩm thành công!');
       }
-
       onSaveSuccess();
     } catch (err) {
       setError('Lỗi: ' + (err.response?.data?.message || err.message));
-      console.error('Error saving product:', err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content product-form-modal">
-        <div className="modal-header">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="product-form-card" onClick={(e) => e.stopPropagation()}>
+        {/* HEADER */}
+        <div className="modal-form-header">
           <h2>{product ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <button className="close-btn-form" onClick={onClose}>×</button>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
-
-        <form onSubmit={handleSubmit}>
+        {/* BODY SCROLLABLE */}
+        <div className="modal-form-body">
+          {error && <div className="error-message">{error}</div>}
+          
           <div className="form-group">
             <label>Tên sản phẩm <span className="required">*</span></label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Nhập tên sản phẩm"
-              required
-            />
+            <input type="text" name="name" className="form-control" value={formData.name} onChange={handleChange} required />
           </div>
 
           <div className="form-group">
             <label>Mô tả</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Nhập mô tả sản phẩm"
-              rows="3"
-            />
+            <textarea name="description" className="form-control" value={formData.description} onChange={handleChange} rows="3" />
           </div>
 
           <div className="form-row">
             <div className="form-group">
               <label>Giá (VNĐ) <span className="required">*</span></label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                placeholder="0"
-                min="0"
-                step="0.01"
-                required
-              />
+              <input type="number" name="price" className="form-control" value={formData.price} onChange={handleChange} min="0" required />
             </div>
-
             <div className="form-group">
               <label>Số lượng <span className="required">*</span></label>
-              <input
-                type="number"
-                name="quantity"
-                value={formData.quantity}
-                onChange={handleChange}
-                placeholder="0"
-                min="0"
-                required
-              />
+              <input type="number" name="quantity" className="form-control" value={formData.quantity} onChange={handleChange} min="0" required />
             </div>
           </div>
 
           <div className="form-group">
             <label>Danh mục</label>
-            <select
-              name="categoryId"
-              value={formData.categoryId}
-              onChange={handleChange}
-            >
+            <select name="categoryId" className="form-control" value={formData.categoryId} onChange={handleChange}>
               <option value="">-- Chọn danh mục --</option>
-              {categories.map(category => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
+              {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
             </select>
           </div>
 
           <div className="form-group">
-            <label>Hình ảnh sản phẩm (Tối đa 5 ảnh)</label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageChange}
-              className="file-input"
-            />
-            <p className="file-hint">
-              📷 Có thể chọn nhiều ảnh cùng lúc. Tổng số ảnh: {existingImages.length + imageFiles.length}/5
-            </p>
-          </div>
-
-          {/* Existing Images */}
-          {existingImages.length > 0 && (
-            <div className="image-preview-section">
-              <label>Ảnh hiện tại:</label>
-              <div className="image-preview-grid">
-                {existingImages.map((url, index) => (
-                  <div key={`existing-${index}`} className="image-preview-item">
-                    <img 
-                      src={`http://localhost:8080${url}`} 
-                      alt={`Existing ${index + 1}`}
-                      className="preview-image"
-                    />
-                    <button
-                      type="button"
-                      className="remove-image-btn"
-                      onClick={() => removeExistingImage(index)}
-                      title="Xóa ảnh"
-                    >
-                      ×
-                    </button>
-                    {index === 0 && <span className="main-badge">Chính</span>}
-                  </div>
-                ))}
-              </div>
+            <label>Hình ảnh (Max 5)</label>
+            <div className="file-input-wrapper">
+               <input type="file" accept="image/*" multiple onChange={handleImageChange} style={{display:'none'}} id="file-upload" />
+               <label htmlFor="file-upload" style={{cursor:'pointer', width:'100%', height:'100%', display:'block'}}>
+                  📂 Click để chọn ảnh hoặc kéo thả vào đây
+               </label>
             </div>
-          )}
-
-          {/* New Image Previews */}
-          {imagePreviews.length > 0 && (
-            <div className="image-preview-section">
-              <label>Ảnh mới sẽ thêm:</label>
-              <div className="image-preview-grid">
-                {imagePreviews.map((preview, index) => (
-                  <div key={`new-${index}`} className="image-preview-item">
-                    <img 
-                      src={preview} 
-                      alt={`Preview ${index + 1}`}
-                      className="preview-image"
-                    />
-                    <button
-                      type="button"
-                      className="remove-image-btn"
-                      onClick={() => removeNewImage(index)}
-                      title="Xóa ảnh"
-                    >
-                      ×
-                    </button>
-                    {existingImages.length === 0 && index === 0 && (
-                      <span className="main-badge">Chính</span>
-                    )}
-                  </div>
-                ))}
-              </div>
+            <div className="image-preview-grid">
+               {existingImages.map((url, i) => (
+                 <div key={`exist-${i}`} className="preview-item">
+                    <img src={`http://localhost:8080${url}`} className="preview-img" alt="Existing" />
+                    <button type="button" className="btn-remove-img" onClick={() => removeExistingImage(i)}>×</button>
+                    {i === 0 && <span className="badge-main">Chính</span>}
+                 </div>
+               ))}
+               {imagePreviews.map((src, i) => (
+                 <div key={`new-${i}`} className="preview-item">
+                    <img src={src} className="preview-img" alt="New" />
+                    <button type="button" className="btn-remove-img" onClick={() => removeNewImage(i)}>×</button>
+                    {existingImages.length === 0 && i === 0 && <span className="badge-main">Chính</span>}
+                 </div>
+               ))}
             </div>
-          )}
-
-          <div className="form-actions">
-            <button type="button" onClick={onClose} className="btn-cancel">
-              Hủy
-            </button>
-            <button type="submit" className="btn-submit" disabled={loading}>
-              {loading ? 'Đang lưu...' : (product ? 'Cập nhật' : 'Thêm mới')}
-            </button>
           </div>
-        </form>
+        </div>
+
+        {/* FOOTER FIXED */}
+        <div className="modal-form-footer">
+           <button type="button" className="btn-cancel" onClick={onClose}>Hủy bỏ</button>
+           <button type="button" className="btn-submit" onClick={handleSubmit} disabled={loading}>
+             {loading ? 'Đang lưu...' : 'Lưu lại'}
+           </button>
+        </div>
       </div>
     </div>
   );

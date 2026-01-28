@@ -1,23 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { userAPI } from '../services/api';
+import { userAPI, addressAPI, uploadAPI } from '../services/api';
 import { useToast } from './Toast';
 import Footer from './Footer';
+import AddressManagement from './AddressManagement';
+import {
+  HiOutlineArrowLeft, HiOutlineUser, HiOutlineMail, HiOutlinePencil,
+  HiOutlineShieldCheck, HiOutlineCalendar, HiOutlineLockClosed,
+  HiOutlineKey, HiOutlineRefresh, HiOutlineCube, HiOutlineShoppingBag,
+  HiOutlineChevronRight, HiOutlineCheck, HiOutlineX, HiOutlineInformationCircle,
+  HiOutlineLocationMarker, HiOutlinePhone, HiOutlineCamera, HiOutlineHeart, HiOutlineBell
+} from 'react-icons/hi';
 import '../styles/ClientProfile.css';
 
 const ClientProfile = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
   
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
+  // ✅ Khởi tạo user từ localStorage (kiểm tra cả 2 key phổ biến)
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user_auth') || localStorage.getItem('user');
+    return JSON.parse(savedUser || '{}');
+  });
+
+  const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // ✅ Helper xử lý URL ảnh từ server
+  const getFullImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    return `http://localhost:8080${path.startsWith('/') ? '' : '/'}${path}`;
+  };
+
+  const [avatarPreview, setAvatarPreview] = useState(getFullImageUrl(user.avatarUrl));
 
   const [formData, setFormData] = useState({
     username: user.username || '',
     email: user.email || '',
     fullName: user.fullName || '',
+    phone: user.phone || '',
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -28,407 +52,270 @@ const ClientProfile = () => {
 
   const [errors, setErrors] = useState({});
 
+  // Reset formData khi user thay đổi
+  useEffect(() => {
+    setFormData({
+      username: user.username || '',
+      email: user.email || '',
+      fullName: user.fullName || '',
+      phone: user.phone || '',
+    });
+    setAvatarPreview(getFullImageUrl(user.avatarUrl));
+  }, [user]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
-    setPasswordData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const validateProfile = () => {
     const newErrors = {};
-
-    if (!formData.email || !formData.email.trim()) {
+    if (!formData.email?.trim()) {
       newErrors.email = 'Email không được để trống';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Email không hợp lệ';
     }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validatePassword = () => {
-    const newErrors = {};
-
-    if (!passwordData.oldPassword) {
-      newErrors.oldPassword = 'Vui lòng nhập mật khẩu cũ';
+    if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone)) {
+      newErrors.phone = 'Số điện thoại không hợp lệ';
     }
-
-    if (!passwordData.newPassword) {
-      newErrors.newPassword = 'Vui lòng nhập mật khẩu mới';
-    } else if (passwordData.newPassword.length < 6) {
-      newErrors.newPassword = 'Mật khẩu phải có ít nhất 6 ký tự';
-    }
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
-    
-    if (!validateProfile()) {
-      addToast('❌ Vui lòng kiểm tra lại thông tin!', 'error');
-      return;
-    }
+    if (!validateProfile()) return;
 
     try {
       setLoading(true);
       await userAPI.updateUser(user.id, formData);
-      
       const updatedUser = { ...user, ...formData };
+      
+      // Cập nhật cả 2 key localStorage
+      localStorage.setItem('user_auth', JSON.stringify(updatedUser));
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      
       setUser(updatedUser);
       setIsEditing(false);
-      
-      addToast('✅ Cập nhật thông tin thành công!', 'success');
+      addToast('Cập nhật thông tin thành công!', 'success');
     } catch (err) {
-      console.error('Update profile error:', err);
-      addToast('❌ ' + (err.response?.data || 'Không thể cập nhật thông tin!'), 'error');
+      addToast(err.response?.data?.message || 'Không thể cập nhật!', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-    if (!validatePassword()) {
-      addToast('❌ Vui lòng kiểm tra lại thông tin!', 'error');
+    if (!file.type.startsWith('image/')) {
+      addToast('Vui lòng chọn file ảnh!', 'error');
       return;
     }
 
+    // Xem trước ảnh tạm thời
+    const localUrl = URL.createObjectURL(file);
+    setAvatarPreview(localUrl);
+
     try {
       setLoading(true);
-      // Gọi API update user với password mới
-      await userAPI.updateUser(user.id, {
-        password: passwordData.newPassword
-      });
+      const response = await uploadAPI.uploadAvatar(user.id, file);
       
-      setShowPasswordForm(false);
-      setPasswordData({
-        oldPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
+      // Backend trả về link ảnh mới
+      const newAvatarUrl = response.data.avatarUrl || response.data;
+      const updatedUser = { ...user, avatarUrl: newAvatarUrl };
+
+      localStorage.setItem('user_auth', JSON.stringify(updatedUser));
+      localStorage.setItem('user', JSON.stringify(updatedUser));
       
-      addToast('✅ Đổi mật khẩu thành công!', 'success');
+      setUser(updatedUser);
+      setAvatarPreview(getFullImageUrl(newAvatarUrl));
+      addToast('Cập nhật ảnh đại diện thành công!', 'success');
     } catch (err) {
-      console.error('Change password error:', err);
-      addToast('❌ ' + (err.response?.data || 'Không thể đổi mật khẩu!'), 'error');
+      console.error(err);
+      addToast('Không thể tải ảnh lên!', 'error');
+      setAvatarPreview(getFullImageUrl(user.avatarUrl));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancelEdit = () => {
-    setFormData({
-      username: user.username || '',
-      email: user.email || '',
-      fullName: user.fullName || '',
-    });
-    setErrors({});
-    setIsEditing(false);
-  };
+  const renderContent = () => {
+    if (showPasswordForm) {
+      return (
+        <div className="profile-card">
+          <div className="card-header">
+            <h2><HiOutlineLockClosed /> Đổi mật khẩu</h2>
+            <button className="btn-back-form" onClick={() => setShowPasswordForm(false)}>
+              <HiOutlineArrowLeft /> Quay lại
+            </button>
+          </div>
+          <form onSubmit={(e) => e.preventDefault()}>
+             <div className="form-section">
+                <p>Chức năng đổi mật khẩu đang được cập nhật...</p>
+             </div>
+             <div className="form-actions">
+                <button type="button" className="btn-cancel" onClick={() => setShowPasswordForm(false)}>Hủy</button>
+             </div>
+          </form>
+        </div>
+      );
+    }
 
-  const handleCancelPassword = () => {
-    setPasswordData({
-      oldPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
-    setErrors({});
-    setShowPasswordForm(false);
+    switch (activeTab) {
+      case 'profile':
+        return (
+          <div className="profile-card">
+            <div className="card-header">
+              <h2><HiOutlineUser /> Thông tin cá nhân</h2>
+              {!isEditing && (
+                <button className="btn-edit" onClick={() => setIsEditing(true)}>
+                  <HiOutlinePencil /> Chỉnh sửa
+                </button>
+              )}
+            </div>
+
+            <form onSubmit={handleUpdateProfile}>
+              <div className="form-section">
+                <div className="form-group">
+                  <label><HiOutlineUser className="label-icon" /> Tên đăng nhập</label>
+                  <input type="text" value={formData.username} disabled className="input-disabled" />
+                </div>
+
+                <div className="form-group">
+                  <label><HiOutlineMail className="label-icon" /> Email *</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    className={errors.email ? 'input-error' : ''}
+                  />
+                  {errors.email && <span className="error-message">{errors.email}</span>}
+                </div>
+
+                <div className="form-group">
+                  <label><HiOutlinePencil className="label-icon" /> Họ và tên</label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label><HiOutlinePhone className="label-icon" /> Số điện thoại</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    className={errors.phone ? 'input-error' : ''}
+                  />
+                  {errors.phone && <span className="error-message">{errors.phone}</span>}
+                </div>
+              </div>
+
+              {isEditing && (
+                <div className="form-actions">
+                  <button type="button" className="btn-cancel" onClick={() => setIsEditing(false)}>Hủy</button>
+                  <button type="submit" className="btn-save" disabled={loading}>Lưu thay đổi</button>
+                </div>
+              )}
+            </form>
+          </div>
+        );
+
+      case 'addresses':
+        return <AddressManagement userId={user.id} />;
+
+      default:
+        return null;
+    }
   };
 
   return (
     <>
       <div className="client-profile">
-        {/* Header */}
         <div className="profile-header">
           <button className="btn-back" onClick={() => navigate('/')}>
-            ← Quay lại
+            <HiOutlineArrowLeft /> Quay lại trang chủ
           </button>
           <div className="header-content">
-            <h1>👤 Tài Khoản Của Tôi</h1>
-            <p className="header-subtitle">Quản lý thông tin cá nhân</p>
+            <h1>Tài Khoản Của Tôi</h1>
           </div>
         </div>
 
         <div className="profile-container">
-          {/* Sidebar */}
           <div className="profile-sidebar">
             <div className="user-card">
-              <div className="user-avatar-large">
-                {user.fullName ? user.fullName.charAt(0).toUpperCase() : user.username?.charAt(0).toUpperCase() || '👤'}
+              <div className="avatar-container">
+                <div className="user-avatar-large">
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Avatar" onError={(e) => e.target.src = 'https://via.placeholder.com/150'} />
+                  ) : (
+                    <div className="avatar-placeholder">
+                      {user.fullName?.charAt(0) || user.username?.charAt(0)}
+                    </div>
+                  )}
+                </div>
+                <label htmlFor="avatar-upload" className="avatar-upload-btn">
+                  <HiOutlineCamera />
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    style={{ display: 'none' }}
+                  />
+                </label>
               </div>
-              <h3 className="user-name">{user.fullName || user.username || 'Người dùng'}</h3>
+              <h3 className="user-name">{user.fullName || user.username}</h3>
               <p className="user-email">{user.email}</p>
-              <div className="user-role">
-                <span className="role-badge">
-                  {user.role === 'ADMIN' ? '👑 Quản trị viên' : '👤 Khách hàng'}
-                </span>
-              </div>
             </div>
 
             <div className="menu-list">
-              <button className="menu-item active">
-                <span className="menu-icon">👤</span>
-                <span>Thông tin cá nhân</span>
+              <button 
+                className={`menu-item ${activeTab === 'profile' && !showPasswordForm ? 'active' : ''}`}
+                onClick={() => { setActiveTab('profile'); setShowPasswordForm(false); }}
+              >
+                <HiOutlineUser className="menu-icon" /> Thông tin cá nhân
               </button>
+              
+              <button 
+                className={`menu-item ${activeTab === 'addresses' ? 'active' : ''}`}
+                onClick={() => { setActiveTab('addresses'); setShowPasswordForm(false); }}
+              >
+                <HiOutlineLocationMarker className="menu-icon" /> Địa chỉ giao hàng
+              </button>
+
               <button className="menu-item" onClick={() => navigate('/orders')}>
-                <span className="menu-icon">📦</span>
-                <span>Đơn hàng</span>
+                <HiOutlineCube className="menu-icon" /> Đơn hàng
               </button>
-              <button className="menu-item" onClick={() => setShowPasswordForm(!showPasswordForm)}>
-                <span className="menu-icon">🔒</span>
-                <span>Đổi mật khẩu</span>
+
+              <button className="menu-item" onClick={() => setShowPasswordForm(true)}>
+                <HiOutlineLockClosed className="menu-icon" /> Đổi mật khẩu
               </button>
             </div>
           </div>
 
-          {/* Main Content */}
           <div className="profile-main">
-            {/* Profile Info Card */}
-            {!showPasswordForm ? (
-              <div className="profile-card">
-                <div className="card-header">
-                  <h2>📋 Thông tin cá nhân</h2>
-                  {!isEditing && (
-                    <button className="btn-edit" onClick={() => setIsEditing(true)}>
-                      ✏️ Chỉnh sửa
-                    </button>
-                  )}
-                </div>
-
-                <form onSubmit={handleUpdateProfile}>
-                  <div className="form-section">
-                    <div className="form-group">
-                      <label>
-                        <span className="label-icon">👤</span>
-                        Tên đăng nhập
-                      </label>
-                      <input
-                        type="text"
-                        name="username"
-                        value={formData.username}
-                        disabled
-                        className="input-disabled"
-                      />
-                      <small className="input-hint">Tên đăng nhập không thể thay đổi</small>
-                    </div>
-
-                    <div className="form-group">
-                      <label>
-                        <span className="label-icon">📧</span>
-                        Email <span className="required">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                        className={errors.email ? 'input-error' : ''}
-                        placeholder="example@email.com"
-                      />
-                      {errors.email && <span className="error-message">{errors.email}</span>}
-                    </div>
-
-                    <div className="form-group">
-                      <label>
-                        <span className="label-icon">✏️</span>
-                        Họ và tên
-                      </label>
-                      <input
-                        type="text"
-                        name="fullName"
-                        value={formData.fullName}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                        placeholder="Nguyễn Văn A"
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>
-                        <span className="label-icon">🎭</span>
-                        Vai trò
-                      </label>
-                      <input
-                        type="text"
-                        value={user.role === 'ADMIN' ? 'Quản trị viên' : 'Khách hàng'}
-                        disabled
-                        className="input-disabled"
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>
-                        <span className="label-icon">📅</span>
-                        Ngày tạo tài khoản
-                      </label>
-                      <input
-                        type="text"
-                        value={user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : '-'}
-                        disabled
-                        className="input-disabled"
-                      />
-                    </div>
-                  </div>
-
-                  {isEditing && (
-                    <div className="form-actions">
-                      <button 
-                        type="button" 
-                        className="btn-cancel"
-                        onClick={handleCancelEdit}
-                        disabled={loading}
-                      >
-                        Hủy
-                      </button>
-                      <button 
-                        type="submit" 
-                        className="btn-save"
-                        disabled={loading}
-                      >
-                        {loading ? '⏳ Đang lưu...' : '✅ Lưu thay đổi'}
-                      </button>
-                    </div>
-                  )}
-                </form>
-              </div>
-            ) : (
-              /* Change Password Card */
-              <div className="profile-card">
-                <div className="card-header">
-                  <h2>🔒 Đổi mật khẩu</h2>
-                  <button className="btn-back-form" onClick={handleCancelPassword}>
-                    ← Quay lại
-                  </button>
-                </div>
-
-                <form onSubmit={handleChangePassword}>
-                  <div className="form-section">
-                    <div className="password-notice">
-                      <span className="notice-icon">ℹ️</span>
-                      <p>Mật khẩu phải có ít nhất 6 ký tự</p>
-                    </div>
-
-                    <div className="form-group">
-                      <label>
-                        <span className="label-icon">🔐</span>
-                        Mật khẩu cũ <span className="required">*</span>
-                      </label>
-                      <input
-                        type="password"
-                        name="oldPassword"
-                        value={passwordData.oldPassword}
-                        onChange={handlePasswordChange}
-                        className={errors.oldPassword ? 'input-error' : ''}
-                        placeholder="Nhập mật khẩu hiện tại"
-                      />
-                      {errors.oldPassword && <span className="error-message">{errors.oldPassword}</span>}
-                    </div>
-
-                    <div className="form-group">
-                      <label>
-                        <span className="label-icon">🔑</span>
-                        Mật khẩu mới <span className="required">*</span>
-                      </label>
-                      <input
-                        type="password"
-                        name="newPassword"
-                        value={passwordData.newPassword}
-                        onChange={handlePasswordChange}
-                        className={errors.newPassword ? 'input-error' : ''}
-                        placeholder="Nhập mật khẩu mới"
-                      />
-                      {errors.newPassword && <span className="error-message">{errors.newPassword}</span>}
-                    </div>
-
-                    <div className="form-group">
-                      <label>
-                        <span className="label-icon">🔄</span>
-                        Xác nhận mật khẩu mới <span className="required">*</span>
-                      </label>
-                      <input
-                        type="password"
-                        name="confirmPassword"
-                        value={passwordData.confirmPassword}
-                        onChange={handlePasswordChange}
-                        className={errors.confirmPassword ? 'input-error' : ''}
-                        placeholder="Nhập lại mật khẩu mới"
-                      />
-                      {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
-                    </div>
-                  </div>
-
-                  <div className="form-actions">
-                    <button 
-                      type="button" 
-                      className="btn-cancel"
-                      onClick={handleCancelPassword}
-                      disabled={loading}
-                    >
-                      Hủy
-                    </button>
-                    <button 
-                      type="submit" 
-                      className="btn-save"
-                      disabled={loading}
-                    >
-                      {loading ? '⏳ Đang xử lý...' : '🔒 Đổi mật khẩu'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {/* Quick Actions */}
-            <div className="quick-actions">
-              <div className="action-card" onClick={() => navigate('/orders')}>
-                <div className="action-icon">📦</div>
-                <div className="action-content">
-                  <h3>Đơn hàng của tôi</h3>
-                  <p>Xem và quản lý đơn hàng</p>
-                </div>
-                <div className="action-arrow">→</div>
-              </div>
-
-              <div className="action-card" onClick={() => navigate('/')}>
-                <div className="action-icon">🛍️</div>
-                <div className="action-content">
-                  <h3>Tiếp tục mua sắm</h3>
-                  <p>Khám phá sản phẩm mới</p>
-                </div>
-                <div className="action-arrow">→</div>
-              </div>
-            </div>
+            {renderContent()}
           </div>
         </div>
       </div>
-
       <Footer />
     </>
   );

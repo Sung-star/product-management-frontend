@@ -1,0 +1,129 @@
+/* Review Form Container */
+.review-form {
+  margin-top: 30px;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 2px solid #e5e7eb;
+}
+
+.review-form h4 {
+  margin: 0 0 20px 0;
+  font-size: 1.3rem;
+  color: #111827;
+  font-weight: 600;
+}
+
+/* Form Group */
+.review-form-group {
+  margin-bottom: 20px;
+}
+
+.review-form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+/* Rating Select */
+.review-rating-select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: white;
+}
+
+.review-rating-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Textarea */
+.review-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.review-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.review-textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Submit Button */
+.review-submit-btn {
+  width: 100%;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.review-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.review-submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Star Preview */
+.review-star-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.review-star-preview span {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Character Count */
+.review-char-count {
+  text-align: right;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .review-form {
+    padding: 16px;
+  }
+
+  .review-form h4 {
+    font-size: 1.1rem;
+  }
+}

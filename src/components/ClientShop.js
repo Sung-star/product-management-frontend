@@ -6,6 +6,21 @@ import { useToast } from './Toast';
 import ProductCard from './ProductCard';
 import { SkeletonGrid } from './Skeleton';
 import Footer from './Footer';
+import { 
+  HiOutlineShoppingCart,
+  HiOutlineShoppingBag,
+  HiOutlineSearch,
+  HiOutlineAdjustments,
+  HiOutlineViewGrid,
+  HiOutlineViewList,
+  HiOutlineUser,
+  HiOutlineLogout,
+  HiOutlineCube,
+  HiOutlineRefresh,
+  HiOutlineX,
+  HiOutlineChevronDown,
+  HiOutlineCheck
+} from 'react-icons/hi';
 import '../styles/ClientShop.css';
 
 const ClientShop = () => {
@@ -27,12 +42,18 @@ const ClientShop = () => {
     sortBy: 'default'
   });
 
-  // Lấy thông tin user từ localStorage
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  // ✅ Cập nhật cách lấy User: Kiểm tra cả 2 key phổ biến
+  const user = JSON.parse(localStorage.getItem('user_auth') || localStorage.getItem('user') || '{}');
+
+  // ✅ Helper hiển thị ảnh từ server
+  const getFullImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    return `http://localhost:8080${path.startsWith('/') ? '' : '/'}${path}`;
+  };
 
   useEffect(() => {
     fetchData();
-    // Đóng user menu khi click outside
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
@@ -59,7 +80,7 @@ const ClientShop = () => {
       setCategories(categoriesRes.data);
     } catch (err) {
       console.error('Error fetching data:', err);
-      addToast('❌ Không thể tải dữ liệu!', 'error');
+      addToast('Không thể tải dữ liệu!', 'error');
     } finally {
       setLoading(false);
     }
@@ -98,20 +119,11 @@ const ClientShop = () => {
     }
 
     switch (filters.sortBy) {
-      case 'price-asc':
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-desc':
-        result.sort((a, b) => b.price - a.price);
-        break;
-      case 'name-asc':
-        result.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'newest':
-        result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        break;
-      default:
-        break;
+      case 'price-asc': result.sort((a, b) => a.price - b.price); break;
+      case 'price-desc': result.sort((a, b) => b.price - a.price); break;
+      case 'name-asc': result.sort((a, b) => a.name.localeCompare(b.name)); break;
+      case 'newest': result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); break;
+      default: break;
     }
 
     setFilteredProducts(result);
@@ -123,40 +135,38 @@ const ClientShop = () => {
 
   const handleAddToCart = (product) => {
     if (product.quantity <= 0) {
-      addToast('⚠️ Sản phẩm đã hết hàng!', 'warning');
+      addToast('Sản phẩm đã hết hàng!', 'warning');
       return;
     }
     addToCart(product);
-    addToast(`✅ Đã thêm "${product.name}" vào giỏ hàng!`, 'success');
+    addToast(`Đã thêm "${product.name}" vào giỏ hàng!`, 'success');
   };
 
   const handleLogout = () => {
-    if (window.confirm('🚪 Bạn có chắc muốn đăng xuất?')) {
+    if (window.confirm('Bạn có chắc muốn đăng xuất?')) {
       clearCart();
       localStorage.removeItem('user');
-      localStorage.removeItem('token');
+      localStorage.removeItem('user_auth'); // Xóa cả 2 key
+      localStorage.removeItem('auth_token');
       navigate('/login');
-      addToast('👋 Đã đăng xuất thành công!', 'info');
+      addToast('Đã đăng xuất thành công!', 'info');
     }
   };
 
   const resetFilters = () => {
-    setFilters({
-      search: '',
-      categoryId: 'all',
-      priceRange: 'all',
-      sortBy: 'default'
-    });
+    setFilters({ search: '', categoryId: 'all', priceRange: 'all', sortBy: 'default' });
   };
 
   return (
     <>
       <div className="client-shop">
-        {/* Enhanced Header */}
+        {/* Header */}
         <div className="shop-header-wrapper">
           <div className="shop-header">
             <div className="header-left">
-              <div className="shop-logo">🛒</div>
+              <div className="shop-logo">
+                <HiOutlineShoppingBag />
+              </div>
               <div>
                 <h1>Cửa Hàng</h1>
                 <p className="header-subtitle">{filteredProducts.length} sản phẩm</p>
@@ -167,20 +177,19 @@ const ClientShop = () => {
               <button 
                 className="view-mode-btn" 
                 onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                title={viewMode === 'grid' ? 'Chế độ danh sách' : 'Chế độ lưới'}
               >
-                {viewMode === 'grid' ? '☰' : '⊞'}
+                {viewMode === 'grid' ? <HiOutlineViewList /> : <HiOutlineViewGrid />}
               </button>
               
               <button className="cart-btn" onClick={() => navigate('/cart')}>
-                <span className="cart-icon">🛍️</span>
+                <HiOutlineShoppingCart className="cart-icon" />
                 <span className="cart-text">Giỏ hàng</span>
                 {getCartItemCount() > 0 && (
                   <span className="cart-badge">{getCartItemCount()}</span>
                 )}
               </button>
 
-              {/* User Menu */}
+              {/* ✅ User Menu - Sửa ảnh và tên */}
               <div className="user-menu-container">
                 <button 
                   className="user-menu-btn"
@@ -190,7 +199,11 @@ const ClientShop = () => {
                   }}
                 >
                   <div className="user-avatar">
-                    {user.name ? user.name.charAt(0).toUpperCase() : '👤'}
+                    {user.avatarUrl ? (
+                      <img src={getFullImageUrl(user.avatarUrl)} alt="Avatar" />
+                    ) : (
+                      user.fullName ? user.fullName.charAt(0).toUpperCase() : <HiOutlineUser />
+                    )}
                   </div>
                 </button>
 
@@ -198,10 +211,15 @@ const ClientShop = () => {
                   <div className="user-dropdown">
                     <div className="user-info">
                       <div className="user-avatar-large">
-                        {user.name ? user.name.charAt(0).toUpperCase() : '👤'}
+                        {user.avatarUrl ? (
+                          <img src={getFullImageUrl(user.avatarUrl)} alt="Avatar" />
+                        ) : (
+                          user.fullName ? user.fullName.charAt(0).toUpperCase() : <HiOutlineUser />
+                        )}
                       </div>
                       <div className="user-details">
-                        <div className="user-name">{user.name || 'Khách hàng'}</div>
+                        {/* ✅ Đổi tên từ user.name sang user.fullName */}
+                        <div className="user-name">{user.fullName || user.username || 'Khách hàng'}</div>
                         <div className="user-email">{user.email || ''}</div>
                       </div>
                     </div>
@@ -209,19 +227,19 @@ const ClientShop = () => {
                     <div className="menu-divider"></div>
                     
                     <button className="menu-item" onClick={() => navigate('/profile')}>
-                      <span className="menu-icon">👤</span>
+                      <HiOutlineUser className="menu-icon" />
                       <span>Tài khoản</span>
                     </button>
                     
                     <button className="menu-item" onClick={() => navigate('/orders')}>
-                      <span className="menu-icon">📦</span>
+                      <HiOutlineCube className="menu-icon" />
                       <span>Đơn hàng</span>
                     </button>
                     
                     <div className="menu-divider"></div>
                     
                     <button className="menu-item logout" onClick={handleLogout}>
-                      <span className="menu-icon">🚪</span>
+                      <HiOutlineLogout className="menu-icon" />
                       <span>Đăng xuất</span>
                     </button>
                   </div>
@@ -234,7 +252,7 @@ const ClientShop = () => {
         {/* Search & Filter Section */}
         <div className="search-filter-section">
           <div className="search-bar-enhanced">
-            <span className="search-icon">🔍</span>
+            <HiOutlineSearch className="search-icon" />
             <input
               type="text"
               placeholder="Tìm kiếm sản phẩm..."
@@ -242,22 +260,15 @@ const ClientShop = () => {
               onChange={(e) => handleFilterChange('search', e.target.value)}
               className="search-input-enhanced"
             />
-            {filters.search && (
-              <button 
-                className="clear-search-btn"
-                onClick={() => handleFilterChange('search', '')}
-              >
-                ✕
-              </button>
-            )}
           </div>
           
           <button 
-            className="filter-toggle-btn"
+            className={`filter-toggle-btn ${showFilters ? 'active' : ''}`}
             onClick={() => setShowFilters(!showFilters)}
           >
-            <span className="filter-icon">⚙️</span>
+            <HiOutlineAdjustments className="filter-icon" />
             <span>Lọc</span>
+            <HiOutlineChevronDown className={`chevron ${showFilters ? 'rotate' : ''}`} />
           </button>
         </div>
 
@@ -267,7 +278,7 @@ const ClientShop = () => {
             className={`category-quick-btn ${filters.categoryId === 'all' ? 'active' : ''}`}
             onClick={() => handleFilterChange('categoryId', 'all')}
           >
-            📦 Tất cả
+            <HiOutlineCube /> Tất cả
           </button>
           {categories.slice(0, 6).map(cat => (
             <button
@@ -285,7 +296,7 @@ const ClientShop = () => {
           <div className="advanced-filters">
             <div className="filter-row">
               <div className="filter-group">
-                <label className="filter-label">💰 Khoảng giá</label>
+                <label className="filter-label">Khoảng giá</label>
                 <select
                   value={filters.priceRange}
                   onChange={(e) => handleFilterChange('priceRange', e.target.value)}
@@ -300,7 +311,7 @@ const ClientShop = () => {
               </div>
 
               <div className="filter-group">
-                <label className="filter-label">🔀 Sắp xếp</label>
+                <label className="filter-label">Sắp xếp</label>
                 <select
                   value={filters.sortBy}
                   onChange={(e) => handleFilterChange('sortBy', e.target.value)}
@@ -317,10 +328,10 @@ const ClientShop = () => {
 
             <div className="filter-actions">
               <button className="btn-reset-filter" onClick={resetFilters}>
-                🔄 Đặt lại
+                <HiOutlineRefresh /> Đặt lại
               </button>
               <button className="btn-close-filter" onClick={() => setShowFilters(false)}>
-                ✓ Áp dụng
+                <HiOutlineCheck /> Áp dụng
               </button>
             </div>
           </div>
@@ -333,7 +344,7 @@ const ClientShop = () => {
           <div className={`products-container ${viewMode}`}>
             {filteredProducts.length === 0 ? (
               <div className="no-products-found">
-                <div className="no-products-icon">🔍</div>
+                <HiOutlineSearch className="no-products-icon" />
                 <h3>Không tìm thấy sản phẩm</h3>
                 <p>Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác</p>
                 <button className="btn-reset-all" onClick={resetFilters}>

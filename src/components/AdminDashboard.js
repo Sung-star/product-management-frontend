@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
 import { Routes, Route, NavLink } from 'react-router-dom';
+import { 
+  HiOutlineChartBar, 
+  HiOutlineCube, 
+  HiOutlineFolder, 
+  HiOutlineShoppingCart, 
+  HiOutlineUsers, 
+  HiOutlineCog,
+  HiChevronLeft,
+  HiChevronRight
+} from 'react-icons/hi';
 import AdminHeader from './AdminHeader';
 import Statistics from './Statistics';
 import ProductList from './ProductList';
@@ -8,9 +18,19 @@ import OrderManager from './OrderManager';
 import UserManager from './UserManager';
 import SettingsPage from './SettingsPage';
 import '../styles/AdminDashboard.css';
-
+import { HiOutlineStar } from 'react-icons/hi';
+import ReviewManager from './ReviewManager';
 const AdminDashboard = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  const menuItems = [
+    { path: '/admin', end: true, icon: HiOutlineChartBar, label: 'Dashboard' },
+    { path: '/admin/products', icon: HiOutlineCube, label: 'Sản phẩm' },
+    { path: '/admin/categories', icon: HiOutlineFolder, label: 'Danh mục' },
+    { path: '/admin/orders', icon: HiOutlineShoppingCart, label: 'Đơn hàng' },
+    { path: '/admin/reviews', icon: HiOutlineStar, label: 'Đánh giá' },
+    { path: '/admin/users', icon: HiOutlineUsers, label: 'Người dùng' },
+  ];
 
   return (
     <div className="admin-dashboard">
@@ -22,42 +42,35 @@ const AdminDashboard = () => {
             <button 
               className="sidebar-toggle"
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              title={isSidebarCollapsed ? 'Mở rộng' : 'Thu gọn'}
             >
-              {isSidebarCollapsed ? '→' : '←'}
+              {isSidebarCollapsed ? <HiChevronRight /> : <HiChevronLeft />}
             </button>
           </div>
 
           <nav className="sidebar-nav">
-            <NavLink to="/admin" end className="nav-item">
-              <span className="nav-icon">📊</span>
-              {!isSidebarCollapsed && <span>Dashboard</span>}
-            </NavLink>
-
-            <NavLink to="/admin/products" className="nav-item">
-              <span className="nav-icon">📦</span>
-              {!isSidebarCollapsed && <span>Sản phẩm</span>}
-            </NavLink>
-
-            <NavLink to="/admin/categories" className="nav-item">
-              <span className="nav-icon">📁</span>
-              {!isSidebarCollapsed && <span>Danh mục</span>}
-            </NavLink>
-
-            <NavLink to="/admin/orders" className="nav-item">
-              <span className="nav-icon">🛒</span>
-              {!isSidebarCollapsed && <span>Đơn hàng</span>}
-            </NavLink>
-
-            <NavLink to="/admin/users" className="nav-item">
-              <span className="nav-icon">👥</span>
-              {!isSidebarCollapsed && <span>Người dùng</span>}
-            </NavLink>
+            {menuItems.map((item) => (
+              <NavLink 
+                key={item.path}
+                to={item.path} 
+                end={item.end}
+                className="nav-item"
+                title={isSidebarCollapsed ? item.label : ''}
+              >
+                <item.icon className="nav-icon" />
+                {!isSidebarCollapsed && <span className="nav-label">{item.label}</span>}
+              </NavLink>
+            ))}
 
             <div className="nav-divider"></div>
 
-            <NavLink to="/admin/settings" className="nav-item">
-              <span className="nav-icon">⚙️</span>
-              {!isSidebarCollapsed && <span>Cài đặt</span>}
+            <NavLink 
+              to="/admin/settings" 
+              className="nav-item"
+              title={isSidebarCollapsed ? 'Cài đặt' : ''}
+            >
+              <HiOutlineCog className="nav-icon" />
+              {!isSidebarCollapsed && <span className="nav-label">Cài đặt</span>}
             </NavLink>
           </nav>
         </aside>
@@ -69,6 +82,7 @@ const AdminDashboard = () => {
             <Route path="categories" element={<CategoryManager />} />
             <Route path="orders" element={<OrderManager />} />
             <Route path="users" element={<UserManager />} />
+            <Route path="reviews" element={<ReviewManager />} />
             <Route path="settings" element={<SettingsPage />} />
           </Routes>
         </main>

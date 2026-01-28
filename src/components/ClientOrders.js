@@ -3,6 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { orderAPI } from '../services/api';
 import { useToast } from './Toast';
 import Footer from './Footer';
+// Đã xóa import getOrderItemImage cũ để dùng hàm mới chuẩn hơn
+import {
+  HiOutlineArrowLeft,
+  HiOutlineCube,
+  HiOutlineClock,
+  HiOutlineCheckCircle,
+  HiOutlineTruck,
+  HiOutlineXCircle,
+  HiOutlineClipboardList,
+  HiOutlineEye,
+  HiOutlineX,
+  HiOutlineUser,
+  HiOutlineMail,
+  HiOutlinePhone,
+  HiOutlineLocationMarker,
+  HiOutlineCreditCard,
+  HiOutlineShoppingBag
+} from 'react-icons/hi';
 import '../styles/ClientOrders.css';
 
 const ClientOrders = () => {
@@ -16,20 +34,51 @@ const ClientOrders = () => {
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+  // --- HÀM XỬ LÝ ẢNH MỚI (Dựa trên ProductCard) ---
+  const getMainImage = (item) => {
+    // Ưu tiên lấy imageUrl lưu trong OrderItem, nếu không có thì lấy từ product gốc
+    let imageSource = item.imageUrl || item.imageUrls || item.product?.imageUrls;
+    let finalUrl = '';
+
+    if (imageSource) {
+      // Trường hợp 1: Là mảng (Array) -> Lấy phần tử đầu tiên
+      if (Array.isArray(imageSource) && imageSource.length > 0) {
+        finalUrl = imageSource[0];
+      } 
+      // Trường hợp 2: Là chuỗi (String) -> Cắt dấu phẩy và lấy cái đầu
+      else if (typeof imageSource === 'string') {
+        finalUrl = imageSource.split(',')[0].trim();
+      }
+    }
+
+    // Nếu vẫn không có ảnh -> Trả về ảnh mặc định
+    if (!finalUrl) {
+      return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400';
+    }
+
+    // Thêm prefix localhost nếu chưa có http
+    if (!finalUrl.startsWith('http') && !finalUrl.startsWith('data:')) {
+      return `http://localhost:8080${finalUrl.startsWith('/') ? '' : '/'}${finalUrl}`;
+    }
+
+    return finalUrl;
+  };
+  // ------------------------------------------------
+
   const ORDER_STATUS = {
-    PENDING: { text: 'Chờ xử lý', color: '#f39c12', icon: '⏳' },
-    CONFIRMED: { text: 'Đã xác nhận', color: '#3498db', icon: '✅' },
-    PROCESSING: { text: 'Đang xử lý', color: '#9b59b6', icon: '⚙️' },
-    SHIPPING: { text: 'Đang giao', color: '#1abc9c', icon: '🚚' },
-    DELIVERED: { text: 'Đã giao', color: '#27ae60', icon: '📦' },
-    CANCELLED: { text: 'Đã hủy', color: '#e74c3c', icon: '❌' },
-    RETURNED: { text: 'Đã trả hàng', color: '#95a5a6', icon: '↩️' }
+    PENDING: { text: 'Chờ xử lý', color: '#f59e0b', icon: HiOutlineClock },
+    CONFIRMED: { text: 'Đã xác nhận', color: '#3b82f6', icon: HiOutlineCheckCircle },
+    PROCESSING: { text: 'Đang xử lý', color: '#8b5cf6', icon: HiOutlineClock },
+    SHIPPING: { text: 'Đang giao', color: '#06b6d4', icon: HiOutlineTruck },
+    DELIVERED: { text: 'Đã giao', color: '#22c55e', icon: HiOutlineCube },
+    CANCELLED: { text: 'Đã hủy', color: '#ef4444', icon: HiOutlineXCircle },
+    RETURNED: { text: 'Đã trả hàng', color: '#6b7280', icon: HiOutlineXCircle }
   };
 
   const PAYMENT_STATUS = {
-    UNPAID: { text: 'Chưa thanh toán', color: '#e67e22' },
-    PAID: { text: 'Đã thanh toán', color: '#27ae60' },
-    REFUNDED: { text: 'Đã hoàn tiền', color: '#95a5a6' }
+    UNPAID: { text: 'Chưa thanh toán', color: '#f59e0b' },
+    PAID: { text: 'Đã thanh toán', color: '#22c55e' },
+    REFUNDED: { text: 'Đã hoàn tiền', color: '#6b7280' }
   };
 
   const PAYMENT_METHOD = {
@@ -49,18 +98,16 @@ const ClientOrders = () => {
       setLoading(true);
       const response = await orderAPI.getAllOrders();
       
-      // Lọc orders của user hiện tại (nếu có email)
       const userOrders = user.email 
         ? response.data.filter(order => order.customerEmail === user.email)
         : response.data;
       
-      // Sort theo thời gian mới nhất
       userOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       
       setOrders(userOrders);
     } catch (err) {
       console.error('Error fetching orders:', err);
-      addToast('❌ Không thể tải danh sách đơn hàng!', 'error');
+      addToast('Không thể tải danh sách đơn hàng!', 'error');
     } finally {
       setLoading(false);
     }
@@ -72,22 +119,22 @@ const ClientOrders = () => {
       setSelectedOrder(response.data);
       setShowDetailModal(true);
     } catch (err) {
-      addToast('❌ Không thể tải chi tiết đơn hàng!', 'error');
+      addToast('Không thể tải chi tiết đơn hàng!', 'error');
     }
   };
 
   const handleCancelOrder = async (orderId) => {
-    if (window.confirm('⚠️ Bạn có chắc muốn hủy đơn hàng này?')) {
+    if (window.confirm('Bạn có chắc muốn hủy đơn hàng này?')) {
       try {
         await orderAPI.cancelOrder(orderId);
-        addToast('✅ Đã hủy đơn hàng thành công!', 'success');
+        addToast('Đã hủy đơn hàng thành công!', 'success');
         fetchOrders();
         if (showDetailModal && selectedOrder?.id === orderId) {
           setShowDetailModal(false);
           setSelectedOrder(null);
         }
       } catch (err) {
-        addToast('❌ ' + (err.response?.data || 'Không thể hủy đơn hàng!'), 'error');
+        addToast(err.response?.data || 'Không thể hủy đơn hàng!', 'error');
       }
     }
   };
@@ -146,10 +193,10 @@ const ClientOrders = () => {
         {/* Header */}
         <div className="orders-header">
           <button className="btn-back" onClick={() => navigate('/')}>
-            ← Quay lại
+            <HiOutlineArrowLeft /> Quay lại
           </button>
           <div className="header-content">
-            <h1>📦 Đơn Hàng Của Tôi</h1>
+            <h1><HiOutlineCube /> Đơn Hàng Của Tôi</h1>
             <p className="header-subtitle">Quản lý và theo dõi đơn hàng</p>
           </div>
         </div>
@@ -160,7 +207,7 @@ const ClientOrders = () => {
             className={`status-tab ${filterStatus === 'all' ? 'active' : ''}`}
             onClick={() => setFilterStatus('all')}
           >
-            <span className="tab-icon">📋</span>
+            <HiOutlineClipboardList className="tab-icon" />
             <span className="tab-text">Tất cả</span>
             <span className="tab-count">{stats.all}</span>
           </button>
@@ -168,7 +215,7 @@ const ClientOrders = () => {
             className={`status-tab ${filterStatus === 'PENDING' ? 'active' : ''}`}
             onClick={() => setFilterStatus('PENDING')}
           >
-            <span className="tab-icon">⏳</span>
+            <HiOutlineClock className="tab-icon" />
             <span className="tab-text">Chờ xử lý</span>
             {stats.PENDING > 0 && <span className="tab-count">{stats.PENDING}</span>}
           </button>
@@ -176,7 +223,7 @@ const ClientOrders = () => {
             className={`status-tab ${filterStatus === 'CONFIRMED' ? 'active' : ''}`}
             onClick={() => setFilterStatus('CONFIRMED')}
           >
-            <span className="tab-icon">✅</span>
+            <HiOutlineCheckCircle className="tab-icon" />
             <span className="tab-text">Đã xác nhận</span>
             {stats.CONFIRMED > 0 && <span className="tab-count">{stats.CONFIRMED}</span>}
           </button>
@@ -184,7 +231,7 @@ const ClientOrders = () => {
             className={`status-tab ${filterStatus === 'SHIPPING' ? 'active' : ''}`}
             onClick={() => setFilterStatus('SHIPPING')}
           >
-            <span className="tab-icon">🚚</span>
+            <HiOutlineTruck className="tab-icon" />
             <span className="tab-text">Đang giao</span>
             {stats.SHIPPING > 0 && <span className="tab-count">{stats.SHIPPING}</span>}
           </button>
@@ -192,7 +239,7 @@ const ClientOrders = () => {
             className={`status-tab ${filterStatus === 'DELIVERED' ? 'active' : ''}`}
             onClick={() => setFilterStatus('DELIVERED')}
           >
-            <span className="tab-icon">📦</span>
+            <HiOutlineCube className="tab-icon" />
             <span className="tab-text">Đã giao</span>
             {stats.DELIVERED > 0 && <span className="tab-count">{stats.DELIVERED}</span>}
           </button>
@@ -202,7 +249,7 @@ const ClientOrders = () => {
         <div className="orders-list">
           {filteredOrders.length === 0 ? (
             <div className="empty-orders">
-              <div className="empty-icon">📦</div>
+              <HiOutlineCube className="empty-icon" />
               <h3>Chưa có đơn hàng nào</h3>
               <p>
                 {filterStatus === 'all' 
@@ -211,13 +258,14 @@ const ClientOrders = () => {
                 }
               </p>
               <button className="btn-shop-now" onClick={() => navigate('/')}>
-                🛍️ Mua sắm ngay
+                <HiOutlineShoppingBag /> Mua sắm ngay
               </button>
             </div>
           ) : (
             filteredOrders.map(order => {
               const status = ORDER_STATUS[order.status];
               const paymentStatus = PAYMENT_STATUS[order.paymentStatus];
+              const StatusIcon = status?.icon || HiOutlineClock;
               
               return (
                 <div key={order.id} className="order-card">
@@ -230,10 +278,17 @@ const ClientOrders = () => {
                   </div>
 
                   <div className="order-card-body">
-                    {/* Order Items Preview */}
                     <div className="order-items-preview">
                       {order.items?.slice(0, 3).map((item, index) => (
                         <div key={index} className="order-item-mini">
+                          <img 
+                            src={getMainImage(item)} 
+                            alt={item.productName}
+                            className="product-image"
+                            onError={(e) => {
+                              e.target.src = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400';
+                            }}
+                          />
                           <div className="item-info">
                             <span className="item-name">{item.productName}</span>
                             <span className="item-qty">x{item.quantity}</span>
@@ -248,7 +303,6 @@ const ClientOrders = () => {
                       )}
                     </div>
 
-                    {/* Order Summary */}
                     <div className="order-summary-mini">
                       <div className="summary-row">
                         <span>Tổng tiền:</span>
@@ -256,17 +310,17 @@ const ClientOrders = () => {
                       </div>
                       <div className="summary-row">
                         <span>Thanh toán:</span>
-                        <span style={{ color: paymentStatus.color, fontWeight: '500' }}>
-                          {paymentStatus.text}
+                        <span style={{ color: paymentStatus?.color, fontWeight: '500' }}>
+                          {paymentStatus?.text}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="order-card-footer">
-                    <div className="order-status-badge" style={{ backgroundColor: status.color }}>
-                      <span>{status.icon}</span>
-                      <span>{status.text}</span>
+                    <div className="order-status-badge" style={{ backgroundColor: status?.color }}>
+                      <StatusIcon />
+                      <span>{status?.text}</span>
                     </div>
                     
                     <div className="order-actions">
@@ -274,14 +328,14 @@ const ClientOrders = () => {
                         className="btn-view-detail"
                         onClick={() => viewOrderDetails(order.id)}
                       >
-                        👁️ Chi tiết
+                        <HiOutlineEye /> Chi tiết
                       </button>
                       {order.status === 'PENDING' && (
                         <button
                           className="btn-cancel-order"
                           onClick={() => handleCancelOrder(order.id)}
                         >
-                          ❌ Hủy
+                          <HiOutlineX /> Hủy
                         </button>
                       )}
                     </div>
@@ -298,30 +352,30 @@ const ClientOrders = () => {
         <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
           <div className="modal-content order-detail-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>📦 Chi tiết đơn hàng #{selectedOrder.id}</h3>
+              <h3><HiOutlineCube /> Chi tiết đơn hàng #{selectedOrder.id}</h3>
               <button className="modal-close" onClick={() => setShowDetailModal(false)}>
-                ✕
+                <HiOutlineX />
               </button>
             </div>
 
             <div className="modal-body">
-              {/* Order Status */}
+              {/* Order Status Timeline */}
               <div className="detail-section">
                 <div className="status-timeline">
                   <div className={`timeline-step ${['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPING', 'DELIVERED'].includes(selectedOrder.status) ? 'completed' : ''}`}>
-                    <div className="step-icon">⏳</div>
+                    <div className="step-icon"><HiOutlineClock /></div>
                     <div className="step-label">Chờ xử lý</div>
                   </div>
                   <div className={`timeline-step ${['CONFIRMED', 'PROCESSING', 'SHIPPING', 'DELIVERED'].includes(selectedOrder.status) ? 'completed' : ''}`}>
-                    <div className="step-icon">✅</div>
+                    <div className="step-icon"><HiOutlineCheckCircle /></div>
                     <div className="step-label">Đã xác nhận</div>
                   </div>
                   <div className={`timeline-step ${['SHIPPING', 'DELIVERED'].includes(selectedOrder.status) ? 'completed' : ''}`}>
-                    <div className="step-icon">🚚</div>
+                    <div className="step-icon"><HiOutlineTruck /></div>
                     <div className="step-label">Đang giao</div>
                   </div>
                   <div className={`timeline-step ${selectedOrder.status === 'DELIVERED' ? 'completed' : ''}`}>
-                    <div className="step-icon">📦</div>
+                    <div className="step-icon"><HiOutlineCube /></div>
                     <div className="step-label">Đã giao</div>
                   </div>
                 </div>
@@ -329,22 +383,22 @@ const ClientOrders = () => {
 
               {/* Customer Info */}
               <div className="detail-section">
-                <h4>👤 Thông tin người nhận</h4>
+                <h4><HiOutlineUser /> Thông tin người nhận</h4>
                 <div className="info-grid">
                   <div className="info-item">
-                    <span className="info-label">Họ tên:</span>
+                    <span className="info-label"><HiOutlineUser /> Họ tên:</span>
                     <span className="info-value">{selectedOrder.customerName}</span>
                   </div>
                   <div className="info-item">
-                    <span className="info-label">Email:</span>
+                    <span className="info-label"><HiOutlineMail /> Email:</span>
                     <span className="info-value">{selectedOrder.customerEmail}</span>
                   </div>
                   <div className="info-item">
-                    <span className="info-label">Số điện thoại:</span>
+                    <span className="info-label"><HiOutlinePhone /> Số điện thoại:</span>
                     <span className="info-value">{selectedOrder.customerPhone}</span>
                   </div>
                   <div className="info-item full-width">
-                    <span className="info-label">Địa chỉ:</span>
+                    <span className="info-label"><HiOutlineLocationMarker /> Địa chỉ:</span>
                     <span className="info-value">{selectedOrder.shippingAddress}</span>
                   </div>
                   {selectedOrder.note && (
@@ -358,17 +412,27 @@ const ClientOrders = () => {
 
               {/* Order Items */}
               <div className="detail-section">
-                <h4>🛒 Sản phẩm</h4>
+                <h4><HiOutlineShoppingBag /> Sản phẩm</h4>
                 <div className="detail-items-list">
                   {selectedOrder.items?.map((item, index) => (
                     <div key={index} className="detail-item">
-                      <div className="item-main">
-                        <span className="item-name">{item.productName}</span>
-                        <span className="item-quantity">x{item.quantity}</span>
-                      </div>
-                      <div className="item-prices">
-                        <span className="item-unit-price">{formatCurrency(item.productPrice)}</span>
-                        <strong className="item-subtotal">{formatCurrency(item.subtotal)}</strong>
+                      <img 
+                        src={getMainImage(item)} 
+                        alt={item.productName}
+                        className="detail-product-image"
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400';
+                        }}
+                      />
+                      <div className="detail-item-content">
+                        <div className="item-main">
+                          <span className="item-name">{item.productName}</span>
+                          <span className="item-quantity">x{item.quantity}</span>
+                        </div>
+                        <div className="item-prices">
+                          <span className="item-unit-price">{formatCurrency(item.productPrice)}</span>
+                          <strong className="item-subtotal">{formatCurrency(item.subtotal)}</strong>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -377,7 +441,7 @@ const ClientOrders = () => {
 
               {/* Payment Info */}
               <div className="detail-section">
-                <h4>💳 Thanh toán</h4>
+                <h4><HiOutlineCreditCard /> Thanh toán</h4>
                 <div className="payment-info">
                   <div className="payment-row">
                     <span>Phương thức:</span>
@@ -403,7 +467,7 @@ const ClientOrders = () => {
                   className="btn-cancel-order-modal"
                   onClick={() => handleCancelOrder(selectedOrder.id)}
                 >
-                  ❌ Hủy đơn hàng
+                  <HiOutlineX /> Hủy đơn hàng
                 </button>
               )}
               <button className="btn-close-modal" onClick={() => setShowDetailModal(false)}>

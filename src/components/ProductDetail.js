@@ -4,6 +4,11 @@ import { productAPI } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useToast } from './Toast';
 import '../styles/ProductDetail.css';
+import { reviewAPI } from '../services/reviewAPI';
+import ReviewList from '../components/ReviewList';
+import ReviewForm from '../components/ReviewForm';
+import StarRating from '../components/StarRating';
+import { useAuth } from '../context/AuthContext';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -15,16 +20,28 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [reviews, setReviews] = useState([]);
+  const [avgRating, setAvgRating] = useState(0);
+  const { currentUser } = useAuth();
 
   useEffect(() => {
-    fetchProduct();
+    fetchAll();
   }, [id]);
 
-  const fetchProduct = async () => {
+  const fetchAll = async () => {
     try {
       setLoading(true);
-      const response = await productAPI.getProductById(id);
-      setProduct(response.data);
+      
+      const [productResponse, reviewsResponse, avgRatingResponse] = await Promise.all([
+        productAPI.getProductById(id),
+        reviewAPI.getReviewsByProduct(id),
+        reviewAPI.getAverageRating(id)
+      ]);
+
+      setProduct(productResponse.data);
+      setReviews(reviewsResponse.data);
+      setAvgRating(avgRatingResponse.data || 0);
+
     } catch (err) {
       console.error('Error fetching product:', err);
       addToast('Không thể tải sản phẩm!', 'error');
@@ -173,6 +190,14 @@ const ProductDetail = () => {
             </div>
           )}
 
+          {/* ⭐ Rating Section - THÊM MỚI */}
+          <div className="product-rating-section" style={{ margin: '15px 0' }}>
+            <StarRating value={avgRating} readOnly />
+            <span style={{ marginLeft: 8, color: '#666' }}>
+              {avgRating.toFixed(1)} / 5 ({reviews.length} đánh giá)
+            </span>
+          </div>
+
           <div className="product-price-section">
             <div className="current-price">
               {product.price?.toLocaleString('vi-VN')} ₫
@@ -253,6 +278,20 @@ const ProductDetail = () => {
             )}
           </div>
         </div>
+      </div>
+
+      {/* REVIEW SECTION - THÊM MỚI */}
+      <div style={{ marginTop: 50 }}>
+        <h2>Đánh giá sản phẩm</h2>
+
+        {currentUser && (
+          <ReviewForm
+            productId={product.id}
+            onSuccess={fetchAll}
+          />
+        )}
+
+        <ReviewList reviews={reviews} />
       </div>
     </div>
   );

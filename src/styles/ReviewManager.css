@@ -1,0 +1,240 @@
+/* Review Manager Container */
+.review-manager {
+  padding: 24px;
+  background: #f9fafb;
+  min-height: calc(100vh - 80px);
+}
+
+.review-manager h2 {
+  margin: 0 0 24px 0;
+  font-size: 1.8rem;
+  color: #111827;
+  font-weight: 600;
+}
+
+/* Loading State */
+.review-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: 18px;
+  color: #6b7280;
+}
+
+/* Table Container */
+.review-table-container {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Table Styles */
+.review-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.review-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.review-table th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.review-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.review-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.review-table td {
+  padding: 16px;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+/* Table Cell Specific Styles */
+.td-review-id {
+  color: #6b7280;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.td-product-name {
+  font-weight: 600;
+  color: #111827;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.td-user-name {
+  color: #374151;
+  font-weight: 500;
+}
+
+.td-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.review-comment {
+  max-width: 350px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #374151;
+  line-height: 1.5;
+}
+
+/* Status Badges */
+.review-status {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.approved {
+  background: #d5f4e6;
+  color: #27ae60;
+}
+
+.pending {
+  background: #ffeaa7;
+  color: #f39c12;
+}
+
+/* Action Buttons */
+.td-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.btn-approve,
+.btn-delete {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-approve {
+  background: #27ae60;
+  color: white;
+}
+
+.btn-approve:hover {
+  background: #229954;
+  transform: scale(1.05);
+}
+
+.btn-delete {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn-delete:hover {
+  background: #c0392b;
+  transform: scale(1.05);
+}
+
+/* No Data */
+.no-reviews-admin {
+  text-align: center;
+  padding: 48px 24px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Statistics Cards (Optional Enhancement) */
+.review-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-card .stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .review-table {
+    font-size: 13px;
+  }
+
+  .review-table th,
+  .review-table td {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 968px) {
+  .review-table-container {
+    overflow-x: auto;
+  }
+
+  .review-table {
+    min-width: 900px;
+  }
+
+  .review-comment {
+    max-width: 250px;
+  }
+}
+
+@media (max-width: 576px) {
+  .review-manager {
+    padding: 16px;
+  }
+
+  .td-actions {
+    flex-direction: column;
+  }
+
+  .review-stats {
+    grid-template-columns: 1fr;
+  }
+}
