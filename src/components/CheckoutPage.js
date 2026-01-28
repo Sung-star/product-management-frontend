@@ -337,7 +337,7 @@ const CheckoutPage = () => {
           <div className="review-products">
             {cart.map(item => (
               <div key={item.id} className="review-product-item">
-                <img src={item.imageUrls?.[0] ? `http://localhost:8080${item.imageUrls[0]}` : '/no-image.png'} alt={item.name} />
+                <img src={item.imageUrls?.[0] ? `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}${item.imageUrls[0]}` : '/no-image.png'} alt={item.name} />
                 <div className="review-product-info">
                   <div className="review-product-name">{item.name}</div>
                   <div className="review-product-qty">Số lượng: {item.cartQuantity}</div>
